@@ -40,6 +40,36 @@ function NPCService:CreateNPC(SpawnLocation: Vector3, Type: string, Name: string
     local NPCHum = NPCModel:FindFirstChild("Humanoid")
     local NPCHumanoidRP = NPCModel:FidnFrstChild("HumanoidRootPart")
 
+    Trove:Add(task.spawn(function()
+        while true do
+            if NPCTable[NPC] ~= nil then
+                local ClosestInfo = {}
+
+                for _,Player in Players:GetPlayers() do
+                    if ClosestInfo == nil then
+                        ClosestInfo = {Player, Player.Character, math.huge}
+                    else
+                        if ClosestInfo[2]:FindFirstChild("HumanoidRootPart") then 
+                            if Player.Character:FindFirstChild("HumanoidRootPart") then
+                                if (ClosestInfo[2].HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).Magnitude <= ClosestInfo[3] then
+                                    ClosestInfo = {Player, Player.Character, (ClosestInfo[2].HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).Magnitude}
+                                end
+                            else
+                                ClosestInfo = {Player, Player.Character}
+                            end
+                        end
+                    end
+                end
+
+                local ClosestPlayer = ClosestInfo[1]
+                NPCHum:MoveTo(ClosestPlayer.Character.HumanoidRootPart.Position)
+                NPCHum.MoveToFinished:Connect(function()
+                end)
+            end
+        end
+        task.wait()
+    end))
+
     Trove:Add(NPCHum.Died:Connect(function()
         local NPCService = Knit.GetService("NPCService")
         NPCService:RemoveNPC(NPCModel)
