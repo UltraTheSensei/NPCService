@@ -2,6 +2,7 @@
 --| Created By: Me
 --| Updated On: 27/01/23
 -------------------------------------------------------------------
+--| This service handles the general NPC System
 
 -------------------------------------------------------------------
 --Services
@@ -15,6 +16,7 @@ local HTTPService = game:GetService("HttpService")
 --Modules
 local Knit = require(REPLICATED_STORAGE.Packages.Knit)
 local Trove = require(REPLICATED_STORAGE.Packages.Trove)
+local Promise = require(REPLICATED_STORAGE.Packages.Promise)
 --local Comm = require(REPLICATED_STORAGE.Packages.Comm)
 
 ------------------------------------------------------------------
@@ -34,11 +36,11 @@ function NPCService:CreateNPC(SpawnLocation: Vector3, Type: string, Name: string
     local TypeFolder = SERVER_STORAGE.NPCs:FindFirstChild(Type)
     local NPCModel = TypeFolder[math.random(1, #TypeFolder:GetChildren())]
     if Name then
-        local NPCModel = TypeFolder:FidnFrstChild(Name)
+        local NPCModel = TypeFolder:FindFirsttChild(Name)
     end
 
     local NPCHum = NPCModel:FindFirstChild("Humanoid")
-    local NPCHumanoidRP = NPCModel:FidnFrstChild("HumanoidRootPart")
+    local NPCHumanoidRP = NPCModel:FindFirstChild("HumanoidRootPart")
 
     Trove:Add(task.spawn(function()
         while true do
@@ -64,10 +66,11 @@ function NPCService:CreateNPC(SpawnLocation: Vector3, Type: string, Name: string
                 local ClosestPlayer = ClosestInfo[1]
                 NPCHum:MoveTo(ClosestPlayer.Character.HumanoidRootPart.Position)
                 NPCHum.MoveToFinished:Connect(function()
+
                 end)
             end
+            task.wait()
         end
-        task.wait()
     end))
 
     Trove:Add(NPCHum.Died:Connect(function()
@@ -101,8 +104,20 @@ function NPCService:CreateNPC(SpawnLocation: Vector3, Type: string, Name: string
 end
 
 function NPCService:GetNPCTable(NPC: Model)
-    if NPCTable[NPC] ~= nil then
-        return NPCTable[NPC]
+    return Promise.defer(function(Resolve, Reject, OnCancel)
+        if NPCTable[NPC] then
+            Resolve(NPCTable[NPC])
+        else
+            NPC:Destroy()
+            Reject("NPC has no table")
+        end
+    end)
+end
+
+function NPCService:Attack(Target: Player, NPC: Model)
+    local TargetChar = Target.Character
+    if (TargetChar:GetPivot().Position - NPC:GetPivot().Position).Magnitude <= 4 then
+        
     end
 end
 
